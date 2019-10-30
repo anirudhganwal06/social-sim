@@ -3,6 +3,22 @@ import argparse
 import numpy as np
 import os
 
+class Queue:
+    def __init__(self):
+        self.items = []
+
+    def isEmpty(self):
+        return self.items == []
+
+    def enqueue(self, item):
+        self.items.insert(0,item)
+
+    def dequeue(self):
+        return self.items.pop()
+
+    def size(self):
+        return len(self.items)
+
 class SocialNetwork:
     def __init__(self):
         self.names = []
@@ -46,6 +62,43 @@ class SocialNetwork:
 
     def getPosts(self, u):
         return self.posts[u]
+
+    def breadthFirstSearch(self, start):
+        if start < len(self.network):
+            visited = []
+            q1 = Queue()
+            result = []
+            V = len(self.network)
+            for i in range(V):
+                visited.append('white')
+            visited[start] = 'grey'
+            result.append(start)
+            q1.enqueue(start)
+            while not q1.isEmpty():
+                curr = q1.dequeue()
+                for i in self.network[curr]:
+                    if visited[i] == 'white':
+                        visited[i] = 'grey'
+                        result.append(i)
+                        q1.enqueue(i)
+                visited[curr] = 'black'
+            return result
+        return None
+
+    def DFSUtil(self, start, visited, result): 
+        visited[start] = True
+        result.append(start)
+        for i in self.network[start]: 
+            if visited[i] == False: 
+                self.DFSUtil(i, visited, result) 
+  
+    def depthFirstSearch(self, start): 
+        if start < len(self.network):
+            visited = [False] * (len(self.network)) 
+            result = []
+            self.DFSUtil(start, visited, result)
+            return result
+        return None
 
 class Post:
     def __init__(self):
@@ -267,10 +320,24 @@ def run(args):
 
             # display and visualize the network
             elif choice == 6:
-                print("...Entering Display network...")
+                print("-:-:-:-:-:-: Displaying Network :-:-:-:-:-:-")
+                for i in range(len(g1.names)):
+                    if len(g1.network[i]) == 0:
+                        print(g1.names[i] + " is not following anybody!")
+                    else:
+                        print(g1.names[i] + " is following ", end = '')
+                        for j in range(len(g1.network[i])):
+                            if j == len(g1.network[i]) - 1:
+                                print(g1.names[g1.network[i][j]], end = '.\n')
+                            else:
+                                print(g1.names[g1.network[i][j]], end = ', ')
+                            
+
                 print('Names:', g1.names)
                 print('Network:', g1.network)
                 print('Posts:', g1.posts)
+                print('BFS: ', g1.breadthFirstSearch(0))
+                print('DFS: ', g1.depthFirstSearch(0))
 
 
 
