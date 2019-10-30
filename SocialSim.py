@@ -54,9 +54,6 @@ class SocialNetwork:
     def createPost(self, u, post):
         self.posts[u].append(post)
 
-    def showGraph(self):
-        print(self.graph)
-
     def getNetwork(self, u):
         return self.network[u]
 
@@ -109,9 +106,12 @@ class Post:
 def run(args):
 
     # initialize a SocialNetwork
+    testFolderPath = 'test1'
     g1 = SocialNetwork()
-
-
+    timestep = ""
+    timestepFile = open(testFolderPath + '/timestep.txt', "a+")
+    likeProbability = 1
+    followProbability = 1
 
     
     if args.ite:
@@ -125,8 +125,8 @@ def run(args):
         print("(4) Edge operations (like/follow-add,remove)")
         print("(5) Newpost")
         print("(6) Display network (visualise)")
-        print("(7) Display statistics")
-        print("(8) Update (runatimestep)")
+        print("(7) Display timestep")
+        print("(8) Update timestep")
         print("(9) Save network") 
         while choice != -1:
 
@@ -145,8 +145,8 @@ def run(args):
                 print("(4) Edge operations (like/follow-add,remove)")
                 print("(5) Newpost")
                 print("(6) Display network (visualise)")
-                print("(7) Display statistics")
-                print("(8) Update (runatimestep)")
+                print("(7) Display timestep")
+                print("(8) Update timestep")
                 print("(9) Save network") 
 
 
@@ -154,10 +154,13 @@ def run(args):
             # Loads the g1 object of type SocialNetwork from the .npy files names1, network1, posts    
             elif choice == 1:
                 print("-:-:-:-:-:-: Loading Networks :-:-:-:-:-:-")
-                if os.path.exists('names1.npy') and os.path.exists('network1.npy') and os.path.exists('posts1.npy'):
-                    loadedNames = np.load('names1.npy', allow_pickle = True)
-                    loadedNetwork = np.load('network1.npy', allow_pickle = True)
-                    loadedPosts = np.load('posts1.npy', allow_pickle = True)
+                namesPath = testFolderPath + '/names.npy'
+                networkPath = testFolderPath + '/network.npy'
+                postsPath = testFolderPath + '/posts.npy'
+                if os.path.exists(namesPath) and os.path.exists(networkPath) and os.path.exists(postsPath):
+                    loadedNames = np.load(namesPath, allow_pickle = True)
+                    loadedNetwork = np.load(networkPath, allow_pickle = True)
+                    loadedPosts = np.load(postsPath, allow_pickle = True)
                     g1.names = [None] * len(loadedNames)
                     g1.network = [None] * len(loadedNames)
                     g1.posts = [None] * len(loadedNames)
@@ -181,6 +184,8 @@ def run(args):
                 
             elif choice == 2:
                 print("...Entering set probabilities...")
+                likeProbability = float(input("Enter the probability of liking: "))
+                followProbability = float(input("Enter the probability of following: "))
 
                 
             # For finding, inserting and deleting a node/person from the SocialNetwork
@@ -211,10 +216,12 @@ def run(args):
                 elif operation == 2:
                     name = input("Enter the name of the person you want to insert: ")
                     g1.createNode(name)
+                    timestep += name + " is added.\n"
 
                 elif operation == 3:   
                     name = input("Enter the name of the person you want to delete: ") 
                     g1.deleteNode(name)
+                    timestep += name + " is deleted.\n"
 
 
             # For liking / unliking / follow / unfollow
@@ -268,6 +275,7 @@ def run(args):
                                                 personPosts[postNumber - 1].likes.pop(j)
                                                 break
                                         print("Post unliked by you!")
+                                        timestep += g1.names[foundIndex] + " unliked " + g1.names[foundPersonIndex] + "'s post - " + personPosts[postNumber - 1].title + "\n"
                                 else:
                                     wantToLike = input("Do you want to like the post(y/n): ")
                                     # while(wantToLike != "n" or wantToLike != "y"):
@@ -275,6 +283,7 @@ def run(args):
                                     if wantToLike == "y":
                                         personPosts[postNumber - 1].likes.append(foundIndex)
                                         print("Post liked by you!")
+                                        timestep += g1.names[foundIndex] + " liked " + g1.names[foundPersonIndex] + "'s post - " + personPosts[postNumber - 1].title + "\n"
                     elif operation == 2:
                         personName = input("Enter the name of the person whom you want to follow/unfollow: ")
                         foundPersonIndex = g1.findNode(personName)
@@ -296,11 +305,13 @@ def run(args):
                                     if wantToUnfollow == "y":
                                         myNetwork.pop(i)
                                         print("You have now unfollowed " + g1.names[foundPersonIndex] + "!")
+                                        timestep += g1.names[foundIndex] + " unfollowed " + g1.names[foundPersonIndex] + "\n"
                                 else:
                                     wantToFollow = input("Do you want to follow " + g1.names[foundPersonIndex] + "(y/n): ")
                                     if wantToFollow == "y":
                                         myNetwork.append(foundPersonIndex)
                                         print("You are now following " + g1.names[foundPersonIndex] + "!")
+                                        timestep += g1.names[foundIndex] + " started following " + g1.names[foundPersonIndex] + "\n"
                             
 
             # Creates a new post    
@@ -315,6 +326,7 @@ def run(args):
                     post.title = input("Enter the title of the new post: ")
                     post.content = input("Enter the content of the new post:\n")
                     g1.createPost(foundIndex, post)
+                    timestep += g1.names[foundIndex] + " posted - (" + post.title + ") " + post.content + "\n"
 
 
 
@@ -338,13 +350,21 @@ def run(args):
                 print('Posts:', g1.posts)
                 print('BFS: ', g1.breadthFirstSearch(0))
                 print('DFS: ', g1.depthFirstSearch(0))
+                print("Like Probability: ", likeProbability)
+                print("Follow Probability: ", followProbability)
 
 
 
             elif choice == 7:
-                print("...Entering Display statistics...")
+                print("-:-:-:-:-:-: Timestep :-:-:-:-:-:-")
+                print(timestep)
             elif choice == 8:
-                print("...Entering run a timestep...")
+                timestepFile.write(timestep)
+                timestepFile.close()
+                timestepFile = open(testFolderPath + '/timestep.txt', "a+")
+                timestep = ""
+                print("-:-:-:-:-:-: Timestep Updated :-:-:-:-:-:-")
+                
 
 
             # saves the g1 object in .npy files
@@ -361,21 +381,75 @@ def run(args):
                 # print('Names:', g1.names)
                 # print('Network:', temp_network)
                 # print('Posts:', temp_posts)
-                np.save('names1.npy', g1.names, allow_pickle = True)
-                np.save('network1.npy', temp_network, allow_pickle = True)
-                np.save('posts1.npy', temp_posts, allow_pickle = True)
+                np.save(testFolderPath + '/names.npy', g1.names, allow_pickle = True)
+                np.save(testFolderPath + '/network.npy', temp_network, allow_pickle = True)
+                np.save(testFolderPath + '/posts.npy', temp_posts, allow_pickle = True)
         
     elif args.sm:
         # if the arguments provided in command line interface will have a '-s' flag, then the program will proceed in simulation mode
         print("### Entering simulation mode ###")
+        testFolderPath = args.sm
+        namesPath = testFolderPath + '/names.npy'
+        networkPath = testFolderPath + '/network.npy'
+        postsPath = testFolderPath + '/posts.npy'
+
+        print("-:-:-:-:-:-: Loading Networks :-:-:-:-:-:-")
+        if os.path.exists(namesPath) and os.path.exists(networkPath) and os.path.exists(postsPath):
+            loadedNames = np.load(namesPath, allow_pickle = True)
+            loadedNetwork = np.load(networkPath, allow_pickle = True)
+            loadedPosts = np.load(postsPath, allow_pickle = True)
+            g1.names = [None] * len(loadedNames)
+            g1.network = [None] * len(loadedNames)
+            g1.posts = [None] * len(loadedNames)
+            for i in range(len(loadedNames)):
+                g1.names[i] = loadedNames[i]
+            for i in range(len(loadedNetwork)):
+                if loadedNetwork[i] == "NA":
+                    g1.network[i] = []
+                else:
+                    g1.network[i] = loadedNetwork[i]
+            for i in range(len(loadedPosts)):
+                if loadedPosts[i] == "NA":
+                    g1.posts[i] = []
+                else:
+                    g1.posts[i] = loadedPosts[i]
+            print('Network loaded successfully')
+            print('(1) Output ')
+            choice = int(input("Enter your choice: "))
+            while choice < 1 or choice > 1:
+                choice = int(input("Enter a valid choice: "))
+            if choice == 1:
+                print("-:-:-:-:-:-: Displaying Network :-:-:-:-:-:-")
+                for i in range(len(g1.names)):
+                    if len(g1.network[i]) == 0:
+                        print(g1.names[i] + " is not following anybody!")
+                    else:
+                        print(g1.names[i] + " is following ", end = '')
+                        for j in range(len(g1.network[i])):
+                            if j == len(g1.network[i]) - 1:
+                                print(g1.names[g1.network[i][j]], end = '.\n')
+                            else:
+                                print(g1.names[g1.network[i][j]], end = ', ')
+                            
+
+                print('Names:', g1.names)
+                print('Network:', g1.network)
+                print('Posts:', g1.posts)
+                print('BFS: ', g1.breadthFirstSearch(0))
+                print('DFS: ', g1.depthFirstSearch(0))
+
+        else:
+            print("No file to load!")
+
 
     else:
         # no argument is passed
         print("### Showing usage information ###")
         print("--> Use the flag '-i' to enter the interactive testing mode")
-        print("--> Use the flag '-s' to enter simulation mode eg:(SocialSim –s netfile eventfile prob_like prob_foll)")    
+        print("--> Use the flag '-s' with a argument of the folder name having all the input files to enter simulation mode eg:(SocialSim –s test1)")    
 
     print("Thank you for using SocialSim")
+    timestepFile.close()
     
 
 def main():
